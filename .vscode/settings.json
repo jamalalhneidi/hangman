@@ -1,4 +1,16 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "prettier.configPath": ".prettierrc.json"
+  	"typescript.tsdk": "node_modules/typescript/lib",
+  	"prettier.configPath": ".prettierrc.json",
+	"typescript.preferences.organizeImports": {
+        "caseFirst": "default",
+        "caseSensitivity": "caseSensitive",
+        "typeOrder": "first",
+        "unicodeCollation": "unicode"
+    },
+    "javascript.experimental.updateImportsOnPaste": true,
+    "editor.codeActionsOnSave": {
+        "source.addMissingImports.ts": "always",
+        "source.organizeImports": "always",
+        "source.sortImports": "always",
+    }
 }
