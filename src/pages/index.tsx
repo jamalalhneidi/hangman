@@ -1,153 +1,119 @@
-import type { inferProcedureInput } from '@trpc/server';
-import Link from 'next/link';
-import { Fragment } from 'react';
-import type { AppRouter } from '~/server/routers/_app';
+import { useEffect, useState } from 'react';
+import Hangman from '~/components/Hangman';
+import { alphabet } from '~/utils/alphabet';
+import { MAX_WRONG_GUESSES } from '~/utils/consts';
 import { trpc } from '../utils/trpc';
 import type { NextPageWithLayout } from './_app';
 
 const IndexPage: NextPageWithLayout = () => {
-    const utils = trpc.useUtils();
-    const postsQuery = trpc.post.list.useInfiniteQuery(
-        {
-            limit: 5,
-        },
-        {
-            getNextPageParam(lastPage) {
-                return lastPage.nextCursor;
-            },
-        },
-    );
+    const { data } = trpc.word.randomWord.useQuery();
+    const word = data?.word ?? '';
 
-    const addPost = trpc.post.add.useMutation({
-        async onSuccess() {
-            // refetches posts after a post is added
-            await utils.post.list.invalidate();
-        },
-    });
-
-    // prefetch all posts for instant navigation
-    // useEffect(() => {
-    //   const allPosts = postsQuery.data?.pages.flatMap((page) => page.items) ?? [];
-    //   for (const { id } of allPosts) {
-    //     void utils.post.byId.prefetch({ id });
-    //   }
-    // }, [postsQuery.data, utils]);
-
+    const { guesses, wrongGuesses, over, restart } = useGuessHandler(word);
     return (
-        <div className="flex flex-col bg-gray-800 py-8">
-            <h1 className="text-4xl font-bold">Welcome to your tRPC with Prisma starter!</h1>
-            <p className="text-gray-400">
-                If you get stuck, check{' '}
-                <Link className="underline" href="https://trpc.io">
-                    the docs
-                </Link>
-                , write a message in our{' '}
-                <Link className="underline" href="https://trpc.io/discord">
-                    Discord-channel
-                </Link>
-                , or write a message in{' '}
-                <Link className="underline" href="https://github.com/trpc/trpc/discussions">
-                    GitHub Discussions
-                </Link>
-                .
-            </p>
-
-            <div className="flex flex-col py-8 items-start gap-y-2">
-                <div className="flex flex-col"></div>
-                <h2 className="text-3xl font-semibold">
-                    Latest Posts
-                    {postsQuery.status === 'pending' && '(loading)'}
-                </h2>
-
-                <button
-                    className="bg-gray-900 p-2 rounded-md font-semibold disabled:bg-gray-700 disabled:text-gray-400"
-                    onClick={() => postsQuery.fetchNextPage()}
-                    disabled={!postsQuery.hasNextPage || postsQuery.isFetchingNextPage}
-                >
-                    {postsQuery.isFetchingNextPage
-                        ? 'Loading more...'
-                        : postsQuery.hasNextPage
-                        ? 'Load More'
-                        : 'Nothing more to load'}
-                </button>
-
-                {postsQuery.data?.pages.map((page, index) => (
-                    <Fragment key={page.items[0]?.id || index}>
-                        {page.items.map((item) => (
-                            <article key={item.id}>
-                                <h3 className="text-2xl font-semibold">{item.title}</h3>
-                                <Link className="text-gray-400" href={`/post/${item.id}`}>
-                                    View more
-                                </Link>
-                            </article>
-                        ))}
-                    </Fragment>
-                ))}
-            </div>
-
-            <hr />
-
-            <div className="flex flex-col py-8 items-center">
-                <h2 className="text-3xl font-semibold pb-2">Add a Post</h2>
-
-                <form
-                    className="py-2 w-4/6"
-                    onSubmit={async (e) => {
-                        /**
-                         * In a real app you probably don't want to use this manually
-                         * Checkout React Hook Form - it works great with tRPC
-                         * @link https://react-hook-form.com/
-                         * @link https://kitchen-sink.trpc.io/react-hook-form
-                         */
-                        e.preventDefault();
-                        const $form = e.currentTarget;
-                        const values = Object.fromEntries(new FormData($form));
-                        type Input = inferProcedureInput<AppRouter['post']['add']>;
-                        //    ^?
-                        const input: Input = {
-                            title: values.title as string,
-                            text: values.text as string,
-                        };
-                        try {
-                            await addPost.mutateAsync(input);
-
-                            $form.reset();
-                        } catch (cause) {
-                            console.error({ cause }, 'Failed to add post');
-                        }
-                    }}
-                >
-                    <div className="flex flex-col gap-y-4 font-semibold">
-                        <input
-                            className="focus-visible:outline-dashed outline-offset-4 outline-2 outline-gray-700 rounded-xl px-4 py-3 bg-gray-900"
-                            id="title"
-                            name="title"
-                            type="text"
-                            placeholder="Title"
-                            disabled={addPost.isPending}
-                        />
-                        <textarea
-                            className="resize-none focus-visible:outline-dashed outline-offset-4 outline-2 outline-gray-700 rounded-xl px-4 py-3 bg-gray-900"
-                            id="text"
-                            name="text"
-                            placeholder="Text"
-                            disabled={addPost.isPending}
-                            rows={6}
-                        />
-
-                        <div className="flex justify-center">
-                            <input
-                                className="cursor-pointer bg-gray-900 p-2 rounded-md px-16"
-                                type="submit"
-                                disabled={addPost.isPending}
-                            />
-                            {addPost.error && <p style={{ color: 'red' }}>{addPost.error.message}</p>}
-                        </div>
+        <div className="flex justify-between items-center h-screen w-3/4 mx-auto p-4 bg-primary-dark">
+            <div className="flex-1 flex flex-col justify-center items-center h-full">
+                <div className="relative">
+                    <div className="w-full h-16 my-4">
+                        {over && <span className="block w-fit mx-auto text-primary-dark text-3xl">Game Over!</span>}
                     </div>
-                </form>
+                    <div className="flex flex-wrap">
+                        {word.split('').map((c, i) => (
+                            <div key={i} className="h-12 flex flex-col items-center px-1 text-3xl">
+                                {c !== ' ' ? (
+                                    <>
+                                        <span className="flex-1 text-primary-dark">{guesses.includes(c) ? c : ''}</span>
+                                        <div className="w-8 h-0.5 mt-2 bg-secondary-dark" />
+                                    </>
+                                ) : (
+                                    <span className="p-2"></span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-16 w-full">
+                        <button
+                            onClick={restart}
+                            className="block mx-auto p-4 text-white hover:bg-gray-500 active:bg-gray-600 border rounded"
+                        >
+                            Restart (<kbd>Enter</kbd>)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div className="flex flex-col">
+                <Hangman wrongGuesses={wrongGuesses} />
+                <div className="grid grid-cols-3 justify-center mt-8 h-32">
+                    {guesses
+                        .filter((c) => !word.includes(c))
+                        .map((c, i) => (
+                            <div
+                                key={i}
+                                className="w-12 h-12 flex items-center justify-center text-2xl text-red-600 border border-red-600 rounded-md mx-1 my-1"
+                            >
+                                {c}
+                            </div>
+                        ))}
+                </div>
             </div>
         </div>
     );
+};
+
+const useGuessHandler = (word: string) => {
+    const [guesses, setGuesses] = useState<string[]>([]);
+    const [wrongGuesses, setWrongGuesses] = useState(0);
+    const [over, setOver] = useState(false);
+
+    const restart = () => {
+        setGuesses([]);
+        setWrongGuesses(0);
+        setOver(false);
+    };
+
+    useEffect(() => {
+        const correctGuessHandler = (c: string) => {
+            setGuesses((prv) => [...prv, c]);
+        };
+
+        const wrongGuessHandler = (c: string) => {
+            if (over) return;
+            setGuesses((prv) => [...prv, c]);
+            setWrongGuesses((prv) => prv + 1);
+        };
+
+        const listener = (e: KeyboardEvent) => {
+            const c = e.key.toLowerCase();
+            if (c === 'enter') {
+                restart();
+                return;
+            }
+            if (over) return;
+            if (!alphabet.english.includes(c) || guesses.includes(c)) return;
+            if (word.includes(c)) correctGuessHandler(c);
+            else wrongGuessHandler(c);
+        };
+
+        document.addEventListener('keydown', listener);
+        return () => {
+            document.removeEventListener('keydown', listener);
+        };
+    }, [word, guesses, wrongGuesses, over]);
+
+    // max wrong guesses reached
+    useEffect(() => {
+        if (wrongGuesses === MAX_WRONG_GUESSES) setOver(true);
+    }, [wrongGuesses]);
+
+    // word guessed
+    useEffect(() => {
+        if (!word.length) return;
+        let done = true;
+        for (const c of word) done &&= c == ' ' || guesses.includes(c);
+        if (done) setOver(true);
+    }, [word, guesses]);
+
+    return { guesses, wrongGuesses, over, restart };
 };
 
 export default IndexPage;
