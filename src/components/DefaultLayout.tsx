@@ -8,7 +8,7 @@ export const DefaultLayout = ({ children }: DefaultLayoutProps) => {
         <>
             <Head>
                 <title>Hangman</title>
-                <link rel="icon" href="/favicon.ico" />
+                <link rel="icon" href="/favicon.svg" />
             </Head>
 
             <main className="h-screen">{children}</main>

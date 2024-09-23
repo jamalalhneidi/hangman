@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';
+import { QueryObserverResult, RefetchOptions } from '@tanstack/react-query';
+import { TRPCClientErrorLike } from '@trpc/client';
+import { DefaultErrorShape } from '@trpc/server/unstable-core-do-not-import';
+import { useCallback, useEffect, useState } from 'react';
 import Hangman from '~/components/Hangman';
 import { alphabet } from '~/utils/alphabet';
 import { MAX_WRONG_GUESSES } from '~/utils/consts';
@@ -6,10 +9,10 @@ import { trpc } from '../utils/trpc';
 import type { NextPageWithLayout } from './_app';
 
 const IndexPage: NextPageWithLayout = () => {
-    const { data } = trpc.word.randomWord.useQuery();
+    const { data, refetch } = trpc.word.randomWord.useQuery();
     const word = data?.word ?? '';
 
-    const { guesses, wrongGuesses, over, restart } = useGuessHandler(word);
+    const { guesses, wrongCounter, over, restart } = useGuessHandler(word, refetch);
     return (
         <div className="flex justify-between items-center h-screen w-3/4 mx-auto p-4 bg-primary-dark">
             <div className="flex-1 flex flex-col justify-center items-center h-full">
@@ -42,7 +45,7 @@ const IndexPage: NextPageWithLayout = () => {
                 </div>
             </div>
             <div className="flex flex-col">
-                <Hangman wrongGuesses={wrongGuesses} />
+                <Hangman wrongCounter={wrongCounter} />
                 <div className="grid grid-cols-3 justify-center mt-8 h-32">
                     {guesses
                         .filter((c) => !word.includes(c))
@@ -60,16 +63,30 @@ const IndexPage: NextPageWithLayout = () => {
     );
 };
 
-const useGuessHandler = (word: string) => {
+const useGuessHandler = (
+    word: string,
+    refetch: (options?: RefetchOptions) => Promise<
+        QueryObserverResult<
+            { word: string | undefined },
+            TRPCClientErrorLike<{
+                input: void;
+                output: { word: string | undefined };
+                transformer: true;
+                errorShape: DefaultErrorShape;
+            }>
+        >
+    >,
+) => {
     const [guesses, setGuesses] = useState<string[]>([]);
-    const [wrongGuesses, setWrongGuesses] = useState(0);
+    const [wrongCounter, setWrongGuesses] = useState(0);
     const [over, setOver] = useState(false);
 
-    const restart = () => {
+    const restart = useCallback(() => {
         setGuesses([]);
         setWrongGuesses(0);
         setOver(false);
-    };
+        refetch();
+    }, [refetch]);
 
     useEffect(() => {
         const correctGuessHandler = (c: string) => {
@@ -98,12 +115,12 @@ const useGuessHandler = (word: string) => {
         return () => {
             document.removeEventListener('keydown', listener);
         };
-    }, [word, guesses, wrongGuesses, over]);
+    }, [word, guesses, wrongCounter, over, restart]);
 
     // max wrong guesses reached
     useEffect(() => {
-        if (wrongGuesses === MAX_WRONG_GUESSES) setOver(true);
-    }, [wrongGuesses]);
+        if (wrongCounter === MAX_WRONG_GUESSES) setOver(true);
+    }, [wrongCounter]);
 
     // word guessed
     useEffect(() => {
@@ -113,7 +130,7 @@ const useGuessHandler = (word: string) => {
         if (done) setOver(true);
     }, [word, guesses]);
 
-    return { guesses, wrongGuesses, over, restart };
+    return { guesses, wrongCounter, over, restart };
 };
 
 export default IndexPage;
