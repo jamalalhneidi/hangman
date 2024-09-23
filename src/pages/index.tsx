@@ -9,7 +9,9 @@ import { trpc } from '../utils/trpc';
 import type { NextPageWithLayout } from './_app';
 
 const IndexPage: NextPageWithLayout = () => {
-    const { data, refetch } = trpc.word.randomWord.useQuery();
+    const { data, refetch } = trpc.word.randomWord.useQuery(undefined, {
+        refetchOnWindowFocus: false,
+    });
     const word = data?.word ?? '';
 
     const { guesses, wrongCounter, over, restart } = useGuessHandler(word, refetch);
