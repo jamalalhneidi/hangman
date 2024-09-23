@@ -130,6 +130,18 @@ const useGuessHandler = (
         if (done) setOver(true);
     }, [word, guesses]);
 
+    // reveal answer on game over
+    useEffect(() => {
+        if (!over) return;
+        let t = 0;
+        for (const c of new Set(word.split(''))) {
+            if (guesses.includes(c)) continue;
+            setTimeout(() => {
+                setGuesses((prv) => [...prv, c]);
+            }, (t += 100));
+        }
+    }, [guesses, over, word]);
+
     return { guesses, wrongCounter, over, restart };
 };
 
