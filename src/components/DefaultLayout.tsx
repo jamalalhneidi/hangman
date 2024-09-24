@@ -8,7 +8,8 @@ export const DefaultLayout = ({ children }: DefaultLayoutProps) => {
         <>
             <Head>
                 <title>Hangman</title>
-                <link rel="icon" href="/favicon.svg" />
+                <link href="/favicon-light.svg" rel="icon" media="(prefers-color-scheme: light)" />
+                <link href="/favicon-dark.svg" rel="icon" media="(prefers-color-scheme: dark)" />
             </Head>
 
             <main className="h-screen">{children}</main>
