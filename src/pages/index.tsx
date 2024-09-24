@@ -108,7 +108,7 @@ const useGuessHandler = (
                 return;
             }
             if (over) return;
-            if (!alphabet.english.includes(c) || guesses.includes(c)) return;
+            if (!alphabet.includes(c) || guesses.includes(c)) return;
             if (word.includes(c)) correctGuessHandler(c);
             else wrongGuessHandler(c);
         };

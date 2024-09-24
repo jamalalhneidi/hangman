@@ -1,6 +1,2 @@
-const alphabet = {
-    english: 'abcdefghijklmnopqrstuvwxyz',
-    german: 'abcdefghijklmnopqrstuvwxyzäöüß',
-};
-
+const alphabet = 'abcdefghijklmnopqrstuvwxyzäöüß';
 export { alphabet };
