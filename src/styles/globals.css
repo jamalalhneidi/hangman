@@ -2,11 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
+/* :root {
+    --primary: rgb(47, 95, 213);
+    --primary-content: rgb(255, 255, 255);
+    --primary-dark: rgb(35, 75, 174);
+    --primary-light: rgb(89, 128, 222);
+    --secondary: rgb(213, 47, 178);
+    --secondary-content: rgb(255, 255, 255);
+    --secondary-dark: rgb(174, 35, 145);
+    --secondary-light: rgb(222, 89, 194);
+    --background: rgb(239, 239, 241);
+    --foreground: rgb(251, 251, 251);
+    --border: rgb(221, 222, 226);
+    --copy: rgb(35, 37, 41);
+    --copy-light: rgb(94, 99, 110);
+    --copy-lighter: rgb(132, 137, 149);
+    --success: rgb(47, 213, 47);
+    --warning: rgb(213, 213, 47);
+    --error: rgb(213, 47, 47);
+    --success-content: rgb(1, 4, 1);
+    --warning-content: rgb(4, 4, 1);
+    --error-content: rgb(255, 255, 255);
+} */
+
+/* @media (prefers-color-scheme: dark) { */
+:root {
+    --primary: rgb(47, 95, 213);
+    --primary-content: rgb(255, 255, 255);
+    --primary-dark: rgb(35, 75, 174);
+    --primary-light: rgb(89, 128, 222);
+    --secondary: rgb(213, 47, 178);
+    --secondary-content: rgb(255, 255, 255);
+    --secondary-dark: rgb(174, 35, 145);
+    --secondary-light: rgb(222, 89, 194);
+    --background: rgb(24, 25, 27);
+    --foreground: rgb(35, 37, 41);
+    --border: rgb(59, 62, 69);
+    --copy: rgb(251, 251, 251);
+    --copy-light: rgb(214, 216, 220);
+    --copy-lighter: rgb(159, 163, 172);
+    --success: rgb(47, 213, 47);
+    --warning: rgb(213, 213, 47);
+    --error: rgb(213, 47, 47);
+    --success-content: rgb(1, 4, 1);
+    --warning-content: rgb(4, 4, 1);
+    --error-content: rgb(255, 255, 255);
+}
+/* } */
 @layer base {
     body {
         height: 100vh;
-        background-color: rgb(31 41 55);
-        color: #fff;
+        background-color: var(--foreground);
+        color: var(--copy);
         padding: 0 32px;
     }
 }

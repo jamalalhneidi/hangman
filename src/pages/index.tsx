@@ -16,19 +16,19 @@ const IndexPage: NextPageWithLayout = () => {
 
     const { guesses, wrongCounter, over, restart } = useGuessHandler(word, refetch);
     return (
-        <div className="flex justify-between items-center h-screen w-3/4 mx-auto p-4 bg-primary-dark">
+        <div className="flex justify-between items-center h-screen w-3/4 mx-auto p-4">
             <div className="flex-1 flex flex-col justify-center items-center h-full">
                 <div className="relative">
                     <div className="w-full h-16 my-4">
-                        {over && <span className="block w-fit mx-auto text-primary-dark text-3xl">Game Over!</span>}
+                        {over && <span className="block w-fit mx-auto text-3xl text-copy">Game Over!</span>}
                     </div>
                     <div className="flex flex-wrap">
                         {word.split('').map((c, i) => (
                             <div key={i} className="h-12 flex flex-col items-center px-1 text-3xl">
                                 {c !== ' ' ? (
                                     <>
-                                        <span className="flex-1 text-primary-dark">{guesses.includes(c) ? c : ''}</span>
-                                        <div className="w-8 h-0.5 mt-2 bg-secondary-dark" />
+                                        <span className="flex-1">{guesses.includes(c) ? c : ''}</span>
+                                        <div className="w-8 h-0.5 mt-2 bg-primary" />
                                     </>
                                 ) : (
                                     <span className="p-2"></span>
@@ -39,7 +39,7 @@ const IndexPage: NextPageWithLayout = () => {
                     <div className="mt-16 w-full">
                         <button
                             onClick={restart}
-                            className="block mx-auto p-4 text-white hover:bg-gray-500 active:bg-gray-600 border rounded"
+                            className="block mx-auto p-4 border broder-border text-primary-content bg-primary hover:bg-primary-light rounded"
                         >
                             Restart (<kbd>Enter</kbd>)
                         </button>
@@ -54,7 +54,7 @@ const IndexPage: NextPageWithLayout = () => {
                         .map((c, i) => (
                             <div
                                 key={i}
-                                className="w-12 h-12 flex items-center justify-center text-2xl text-red-600 border border-red-600 rounded-md mx-1 my-1"
+                                className="w-12 h-12 flex items-center justify-center text-2xl text-error border-error border rounded-md mx-1 my-1"
                             >
                                 {c}
                             </div>
