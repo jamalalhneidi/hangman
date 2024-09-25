@@ -104,13 +104,13 @@ const useGuessHandler = (
         refetch();
     }, [isFetching, refetch]);
 
-    const freebie = () => {
+    const freebie = useCallback(() => {
         for (const c of word) {
             if (guesses.includes(c)) continue;
             setGuesses((prv) => [...prv, c]);
             return;
         }
-    };
+    }, [guesses, word]);
 
     useEffect(() => {
         if (isFetching) return;
@@ -125,13 +125,13 @@ const useGuessHandler = (
         };
 
         const listener = (e: KeyboardEvent) => {
-            e.preventDefault();
             const c = e.key.toLowerCase();
             if (c === 'enter') {
                 restart();
                 return;
             }
             if (e.ctrlKey && c == 'h') {
+                e.preventDefault();
                 freebie();
                 return;
             }
