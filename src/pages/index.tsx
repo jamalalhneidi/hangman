@@ -1,6 +1,7 @@
 import { QueryObserverResult, RefetchOptions } from '@tanstack/react-query';
 import { TRPCClientErrorLike } from '@trpc/client';
 import { DefaultErrorShape } from '@trpc/server/unstable-core-do-not-import';
+import { Spinner } from 'flowbite-react';
 import { useCallback, useEffect, useState } from 'react';
 import Hangman from '~/components/Hangman';
 import { alphabet } from '~/utils/alphabet';
@@ -9,18 +10,21 @@ import { trpc } from '../utils/trpc';
 import type { NextPageWithLayout } from './_app';
 
 const IndexPage: NextPageWithLayout = () => {
-    const { data, refetch } = trpc.word.randomWord.useQuery(undefined, {
+    const { data, refetch, isFetching } = trpc.word.randomWord.useQuery(undefined, {
         refetchOnWindowFocus: false,
     });
     const word = data?.word ?? '';
 
-    const { guesses, wrongCounter, over, restart } = useGuessHandler(word, refetch);
+    const { guesses, wrongCounter, over, restart } = useGuessHandler(word, isFetching, refetch);
     return (
         <div className="flex justify-between items-center h-screen w-3/4 mx-auto p-4">
             <div className="flex-1 flex flex-col justify-center items-center h-full">
                 <div className="relative">
                     <div className="w-full h-16 my-4">
-                        {over && <span className="block w-fit mx-auto text-3xl text-copy">Game Over!</span>}
+                        {isFetching && <Spinner className="block mx-auto fill-primary" size="xl" />}
+                        {over && !isFetching && (
+                            <span className="block w-fit mx-auto text-3xl text-copy">Game Over!</span>
+                        )}
                     </div>
                     <div className="flex flex-wrap">
                         {word.split('').map((c, i) => (
@@ -38,8 +42,9 @@ const IndexPage: NextPageWithLayout = () => {
                     </div>
                     <div className="mt-16 w-full">
                         <button
+                            disabled={isFetching}
                             onClick={restart}
-                            className="block mx-auto p-4 border broder-border text-primary-content bg-primary hover:bg-primary-light rounded"
+                            className="block mx-auto p-4 border broder-border text-primary-content bg-primary hover:disabled:bg-primary hover:bg-primary-light disabled:cursor-not-allowed rounded"
                         >
                             Restart (<kbd>Enter</kbd>)
                         </button>
@@ -67,6 +72,7 @@ const IndexPage: NextPageWithLayout = () => {
 
 const useGuessHandler = (
     word: string,
+    isFetching: boolean,
     refetch: (options?: RefetchOptions) => Promise<
         QueryObserverResult<
             { word: string | undefined },
@@ -84,13 +90,15 @@ const useGuessHandler = (
     const [over, setOver] = useState(false);
 
     const restart = useCallback(() => {
+        if (isFetching) return;
         setGuesses([]);
         setWrongGuesses(0);
         setOver(false);
         refetch();
-    }, [refetch]);
+    }, [isFetching, refetch]);
 
     useEffect(() => {
+        if (isFetching) return;
         const correctGuessHandler = (c: string) => {
             setGuesses((prv) => [...prv, c]);
         };
@@ -117,7 +125,7 @@ const useGuessHandler = (
         return () => {
             document.removeEventListener('keydown', listener);
         };
-    }, [word, guesses, wrongCounter, over, restart]);
+    }, [word, guesses, wrongCounter, over, restart, isFetching]);
 
     // max wrong guesses reached
     useEffect(() => {
