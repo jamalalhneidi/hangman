@@ -15,7 +15,7 @@ const IndexPage: NextPageWithLayout = () => {
     });
     const word = data?.word ?? '';
 
-    const { guesses, wrongCounter, over, restart } = useGuessHandler(word, isFetching, refetch);
+    const { guesses, wrongCounter, over, restart, freebie } = useGuessHandler(word, isFetching, refetch);
     return (
         <div className="flex justify-between items-center h-screen w-3/4 mx-auto p-4">
             <div className="flex-1 flex flex-col justify-center items-center h-full">
@@ -40,13 +40,20 @@ const IndexPage: NextPageWithLayout = () => {
                             </div>
                         ))}
                     </div>
-                    <div className="mt-16 w-full">
+                    <div className="mt-16 w-full flex justify-center items-center">
                         <button
                             disabled={isFetching}
                             onClick={restart}
-                            className="block mx-auto p-4 border broder-border text-primary-content bg-primary hover:disabled:bg-primary hover:bg-primary-light disabled:cursor-not-allowed rounded"
+                            className="mx-4 p-4 border broder-border text-primary-content bg-primary hover:disabled:bg-primary hover:bg-primary-light disabled:cursor-not-allowed rounded"
                         >
                             Restart (<kbd>Enter</kbd>)
+                        </button>
+                        <button
+                            disabled={isFetching}
+                            onClick={freebie}
+                            className="text-sm p-2 mx-4 my-auto border broder-border text-secondary-content bg-secondary hover:bg-secondary-light rounded"
+                        >
+                            Freebie <br />(<kbd>Ctrl + H</kbd>)
                         </button>
                     </div>
                 </div>
@@ -97,6 +104,14 @@ const useGuessHandler = (
         refetch();
     }, [isFetching, refetch]);
 
+    const freebie = () => {
+        for (const c of word) {
+            if (guesses.includes(c)) continue;
+            setGuesses((prv) => [...prv, c]);
+            return;
+        }
+    };
+
     useEffect(() => {
         if (isFetching) return;
         const correctGuessHandler = (c: string) => {
@@ -110,9 +125,14 @@ const useGuessHandler = (
         };
 
         const listener = (e: KeyboardEvent) => {
+            e.preventDefault();
             const c = e.key.toLowerCase();
             if (c === 'enter') {
                 restart();
+                return;
+            }
+            if (e.ctrlKey && c == 'h') {
+                freebie();
                 return;
             }
             if (over) return;
@@ -125,7 +145,7 @@ const useGuessHandler = (
         return () => {
             document.removeEventListener('keydown', listener);
         };
-    }, [word, guesses, wrongCounter, over, restart, isFetching]);
+    }, [word, guesses, wrongCounter, over, restart, isFetching, freebie]);
 
     // max wrong guesses reached
     useEffect(() => {
@@ -152,7 +172,7 @@ const useGuessHandler = (
         }
     }, [guesses, over, word]);
 
-    return { guesses, wrongCounter, over, restart };
+    return { guesses, wrongCounter, over, restart, freebie };
 };
 
 export default IndexPage;
