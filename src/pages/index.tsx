@@ -1,6 +1,3 @@
-import { QueryObserverResult, RefetchOptions } from '@tanstack/react-query';
-import { TRPCClientErrorLike } from '@trpc/client';
-import { DefaultErrorShape } from '@trpc/server/unstable-core-do-not-import';
 import { Spinner } from 'flowbite-react';
 import { useCallback, useEffect, useState } from 'react';
 import Hangman from '~/components/Hangman';
@@ -10,12 +7,7 @@ import { trpc } from '../utils/trpc';
 import type { NextPageWithLayout } from './_app';
 
 const IndexPage: NextPageWithLayout = () => {
-    const { data, refetch, isFetching } = trpc.word.randomWord.useQuery(undefined, {
-        refetchOnWindowFocus: false,
-    });
-    const word = data?.word ?? '';
-
-    const { guesses, wrongCounter, over, restart, freebie } = useGuessHandler(word, isFetching, refetch);
+    const { guesses, wrongCounter, over, restart, freebie, word, isFetching } = useGameHandler();
     return (
         <div className="flex justify-between items-center h-screen w-3/4 mx-auto p-4">
             <div className="flex-1 flex flex-col justify-center items-center h-full">
@@ -77,32 +69,44 @@ const IndexPage: NextPageWithLayout = () => {
     );
 };
 
-const useGuessHandler = (
-    word: string,
-    isFetching: boolean,
-    refetch: (options?: RefetchOptions) => Promise<
-        QueryObserverResult<
-            { word: string | undefined },
-            TRPCClientErrorLike<{
-                input: void;
-                output: { word: string | undefined };
-                transformer: true;
-                errorShape: DefaultErrorShape;
-            }>
-        >
-    >,
-) => {
+const useGameHandler = () => {
     const [guesses, setGuesses] = useState<string[]>([]);
     const [wrongCounter, setWrongGuesses] = useState(0);
     const [over, setOver] = useState(false);
+    const [words, setWords] = useState<string[]>([]);
+    const [word, setWord] = useState<string>('');
+    const [limit, setLimit] = useState(49);
+    const { data, refetch, isFetching, isLoading } = trpc.word.randomWord.useQuery(
+        { limit },
+        {
+            refetchOnWindowFocus: false,
+        },
+    );
+
+    useEffect(() => {
+        if (!isLoading) setLimit(1);
+    }, [isLoading]);
+
+    useEffect(() => {
+        setWords((prv) => [...prv, ...(data?.words ?? [])]);
+    }, [data]);
+
+    useEffect(() => {
+        setWord(words[0] ?? '');
+        if (words.length < 50) refetch();
+    }, [refetch, words]);
+
+    const nextWord = useCallback(() => {
+        setWords((prv) => prv.slice(1));
+    }, []);
 
     const restart = useCallback(() => {
         if (isFetching) return;
         setGuesses([]);
         setWrongGuesses(0);
         setOver(false);
-        refetch();
-    }, [isFetching, refetch]);
+        nextWord();
+    }, [isFetching, nextWord]);
 
     const freebie = useCallback(() => {
         for (const c of word) {
@@ -112,6 +116,7 @@ const useGuessHandler = (
         }
     }, [guesses, word]);
 
+    // listener
     useEffect(() => {
         if (isFetching) return;
         const correctGuessHandler = (c: string) => {
@@ -172,7 +177,7 @@ const useGuessHandler = (
         }
     }, [guesses, over, word]);
 
-    return { guesses, wrongCounter, over, restart, freebie };
+    return { guesses, wrongCounter, over, word, isFetching, restart, freebie };
 };
 
 export default IndexPage;
