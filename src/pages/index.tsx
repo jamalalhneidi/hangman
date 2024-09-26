@@ -18,7 +18,7 @@ const IndexPage: NextPageWithLayout = () => {
                             <span className="block w-fit mx-auto text-3xl text-copy">Game Over!</span>
                         )}
                     </div>
-                    <div className="flex flex-wrap">
+                    <div className="flex flex-wrap justify-center">
                         {word.split('').map((c, i) => (
                             <div key={i} className="h-12 flex flex-col items-center px-1 text-3xl">
                                 {c !== ' ' ? (
