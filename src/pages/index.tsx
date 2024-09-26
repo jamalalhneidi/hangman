@@ -1,4 +1,3 @@
-import { Spinner } from 'flowbite-react';
 import { useCallback, useEffect, useState } from 'react';
 import Hangman from '~/components/Hangman';
 import { alphabet } from '~/utils/alphabet';
@@ -13,7 +12,7 @@ const IndexPage: NextPageWithLayout = () => {
             <div className="flex-1 flex flex-col justify-center items-center h-full">
                 <div className="relative">
                     <div className="w-full h-16 my-4">
-                        {isFetching && <Spinner className="block mx-auto fill-primary" size="xl" />}
+                        {/* {isFetching && <Spinner className="block mx-auto fill-primary" size="xl" />} */}
                         {over && !isFetching && (
                             <span className="block w-fit mx-auto text-3xl text-copy">Game Over!</span>
                         )}
@@ -101,12 +100,11 @@ const useGameHandler = () => {
     }, []);
 
     const restart = useCallback(() => {
-        if (isFetching) return;
         setGuesses([]);
         setWrongGuesses(0);
         setOver(false);
         nextWord();
-    }, [isFetching, nextWord]);
+    }, [nextWord]);
 
     const freebie = useCallback(() => {
         for (const c of word) {
@@ -118,7 +116,6 @@ const useGameHandler = () => {
 
     // listener
     useEffect(() => {
-        if (isFetching) return;
         const correctGuessHandler = (c: string) => {
             setGuesses((prv) => [...prv, c]);
         };
