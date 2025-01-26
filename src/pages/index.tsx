@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
 import Hangman from '~/components/Hangman';
 import { alphabet } from '~/utils/alphabet';
 import { MAX_WRONG_GUESSES } from '~/utils/consts';
+import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '../utils/trpc';
 import type { NextPageWithLayout } from './_app';
 
